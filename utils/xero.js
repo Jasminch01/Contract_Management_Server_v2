@@ -15,7 +15,7 @@ const xero = new XeroClient({
     "openid",
     "profile",
     "email",
-    "accounting.transactions",
+    "accounting.transactions", 
     "accounting.contacts",
     "accounting.settings",
     "offline_access",
