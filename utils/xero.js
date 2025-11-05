@@ -6,7 +6,6 @@ const xero = new XeroClient({
   clientId: `6030C0D1BF0B42C59AC0056C098BAD87`,
   clientSecret: `QfxeO6UQZb3ZPR_0z1EPMtdXDGhLroFaEFJC9dSYN-C9iKzI`,
   redirectUris: [
-    `http://localhost:8000/api/auth/xero/callback`,
     `https://contract-management-test.vercel.app/api/auth/xero/callback`,
   ],
   scopes: [
