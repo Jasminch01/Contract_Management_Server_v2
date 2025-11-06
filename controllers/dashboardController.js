@@ -4,7 +4,7 @@ const moment = require("moment");
 const calculateCommission = (contracts) => {
   return contracts.reduce((sum, contract) => {
     // Only process completed contracts
-    if (contract.status === "Complete") {
+    if (contract.status === "Complete" || "Invoiced") {
       const rate = parseFloat(contract.brokerRate) || 0;
       const tonnes = parseFloat(contract.tonnes) || 0;
       let multiplier = 0;

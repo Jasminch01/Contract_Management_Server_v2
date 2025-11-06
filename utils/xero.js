@@ -3,12 +3,12 @@ const XeroToken = require("../models/XeroToken");
 
 // Xero Client
 const xero = new XeroClient({
-  clientId: `462C23EFDD58459EAA6DBDE24FA7E21D`,
+  clientId: `462C23EFDD58459EAA6DBDE24FA7E21D`, 
   // clientId: `6030C0D1BF0B42C59AC0056C098BAD87`,
-  clientSecret: `6k-yBz6c-q7y2KiQ0HM5PCQBQUVGtmwEpfMNGkFvGIs4rOzy`,
-  // clientSecret: `QfxeO6UQZb3ZPR_0z1EPMtdXDGhLroFaEFJC9dSYN-C9iKzI`,
+  clientSecret: `6k-yBz6c-q7y2KiQ0HM5PCQBQUVGtmwEpfMNGkFvGIs4rOzy`, 
+  // clientSecret: `3dqLHdc7NTar_wUlljHVPPPFXWhZFZdmBkjI3Ai_2e005TVC`,
   redirectUris: [
-    // `http://localhost:8000/api/auth/xero/callback`
+    `http://localhost:8000/api/auth/xero/callback`
     `https://contract-management-server-v2-1kq1.vercel.app/api/auth/xero/callback`,
   ],
   scopes: [
