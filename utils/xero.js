@@ -207,14 +207,6 @@ const buildLineItems = (contract, taxType, accountCode) => {
       taxType: taxType,
     });
 
-    console.log(`✅ Built line item for contract ${contract.contractNumber}:`, {
-      description: description.substring(0, 50) + "...",
-      quantity: 1,
-      unitAmount: contract.priceExGST,
-      taxType,
-      accountCode,
-    });
-
     return lineItems;
   } catch (err) {
     console.error("⚠️ Failed to build line items:", err.message);

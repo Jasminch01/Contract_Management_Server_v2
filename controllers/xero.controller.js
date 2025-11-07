@@ -192,17 +192,11 @@ exports.callback = async (req, res) => {
   }
 };
 
-// ONLY REPLACE THIS FUNCTION in xeroController.js
-
 exports.getStatus = async (req, res) => {
   try {
-    console.log("🔍 Checking Xero connection status...");
-
     const tokenData = await XeroToken.findOne().sort({ updatedAt: -1 });
-
     // No token exists
     if (!tokenData || !tokenData.accessToken || !tokenData.refreshToken) {
-      console.log("❌ No token found in database");
       return res.status(200).json({
         data: {
           connected: false,
@@ -216,14 +210,7 @@ exports.getStatus = async (req, res) => {
     const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
     const isExpired = now.getTime() >= expiresAt.getTime() - bufferTime;
 
-    console.log("Token Status:");
-    console.log("- Expires at:", expiresAt.toISOString());
-    console.log("- Current time:", now.toISOString());
-    console.log("- Is expired:", isExpired);
-
     if (isExpired) {
-      console.log("⚠️ Token expired or expiring soon, attempting refresh...");
-
       try {
         // Attempt to refresh the token
         const { refreshXeroToken } = require("../utils/xero");
@@ -262,7 +249,6 @@ exports.getStatus = async (req, res) => {
     }
 
     // Token is valid and not expired
-    console.log("✅ Token is valid");
     return res.status(200).json({
       data: {
         connected: true,
@@ -280,33 +266,6 @@ exports.getStatus = async (req, res) => {
     });
   }
 };
-
-// exports.getStatus = async (req, res) => {
-//   try {
-//     const connected = await isXeroConnected();
-
-//     if (connected) {
-//       const tokenData = await XeroToken.findOne().sort({ updatedAt: -1 });
-
-//       return res.status(200).json({
-//         data: {
-//           connected: true,
-//           tenantName: tokenData?.tenantName,
-//           connectedAt: tokenData?.updatedAt,
-//         },
-//       });
-//     }
-
-//     return res.status(200).json({
-//       data: {
-//         connected: false,
-//       },
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ error: "Failed to check Xero connection status" });
-//   }
-// };
 
 exports.createInvoice = async (req, res) => {
   try {
@@ -469,7 +428,6 @@ exports.createInvoice = async (req, res) => {
       try {
         const { refreshXeroToken } = require("../utils/xero");
         tokenSet = await refreshXeroToken();
-        console.log("✅ Token refreshed successfully");
       } catch (refreshError) {
         console.error("❌ Token refresh failed:", refreshError.message);
 
@@ -585,8 +543,6 @@ exports.createInvoice = async (req, res) => {
     // ALWAYS USE PUT (updateOrCreateInvoices) - This is the key change
     if (allContractsHaveSameInvoice) {
       try {
-        console.log(`Checking existing invoice: ${existingInvoiceId}`);
-
         // First, try to fetch the existing invoice to check its status
         let existingInvoiceData = null;
         try {
@@ -596,9 +552,7 @@ exports.createInvoice = async (req, res) => {
           );
           existingInvoiceData = existingInvoiceResponse.body.invoices?.[0];
           existingInvoiceStatus = existingInvoiceData?.status;
-          console.log(`Existing invoice status: ${existingInvoiceStatus}`);
         } catch (fetchError) {
-          console.log("Could not fetch existing invoice, will create new one");
           existingInvoiceData = null;
         }
 
@@ -609,9 +563,6 @@ exports.createInvoice = async (req, res) => {
             existingInvoiceStatus === "SUBMITTED")
         ) {
           // Invoice exists and can be updated - use PUT with existing ID
-          console.log(
-            `Updating existing invoice ${existingInvoiceId} using PUT`
-          );
           invoice.invoiceID = existingInvoiceId;
 
           const invoices = { invoices: [invoice] };
@@ -623,7 +574,6 @@ exports.createInvoice = async (req, res) => {
           );
 
           isUpdate = true;
-          console.log("✅ Invoice updated successfully using PUT");
         } else if (
           existingInvoiceData &&
           (existingInvoiceStatus === "AUTHORISED" ||
@@ -642,11 +592,6 @@ exports.createInvoice = async (req, res) => {
             },
           });
         } else {
-          // Invoice doesn't exist or couldn't be fetched - use PUT to create new
-          console.log(
-            "Creating new invoice using PUT (invoice ID was invalid)"
-          );
-
           // Clear invalid invoice reference from contracts
           await Contract.updateMany(
             { _id: { $in: contractIdArray } },
@@ -663,7 +608,6 @@ exports.createInvoice = async (req, res) => {
           );
 
           isUpdate = false;
-          console.log("✅ New invoice created using PUT");
         }
       } catch (error) {
         console.error("Error in PUT operation:", error.message);
@@ -675,7 +619,6 @@ exports.createInvoice = async (req, res) => {
         );
 
         // Retry with PUT to create new invoice
-        console.log("Retrying with PUT to create new invoice");
         const invoices = { invoices: [invoice] };
         invoiceResponse = await xero.accountingApi.updateOrCreateInvoices(
           tenantId,
@@ -687,7 +630,6 @@ exports.createInvoice = async (req, res) => {
       }
     } else {
       // No existing invoice - use PUT to create new one
-      console.log("Creating new invoice using PUT (no existing invoice)");
       const invoices = { invoices: [invoice] };
       invoiceResponse = await xero.accountingApi.updateOrCreateInvoices(
         tenantId,
