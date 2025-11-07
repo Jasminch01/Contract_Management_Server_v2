@@ -8,6 +8,7 @@ const contactSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     phoneNumber: { type: String, required: true },
+    isPrimary: { type: Boolean },
   },
   { _id: false }
 );
@@ -156,24 +157,5 @@ contractSchema.pre("save", function (next) {
   }
   next();
 });
-
-// contractSchema.pre("save", async function (next) {
-//   if (this.isNew && !this.contractNumber) {
-//     try {
-//       const counter = await Counter.findByIdAndUpdate(
-//         "contract",
-//         { $inc: { seq: 1 } },
-//         { new: true, upsert: true }
-//       );
-//       const padded = String(counter.seq).padStart(4, "0"); // 0001
-//       this.contractNumber = `ZJ${padded}`;
-//       next();
-//     } catch (err) {
-//       next(err);
-//     }
-//   } else {
-//     next();
-//   }
-// });
 
 module.exports = mongoose.model("Contract", contractSchema);
