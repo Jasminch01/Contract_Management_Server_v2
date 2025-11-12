@@ -3,19 +3,19 @@ const XeroToken = require("../models/XeroToken");
 
 // Xero Client
 const xero = new XeroClient({
-  clientId: `462C23EFDD58459EAA6DBDE24FA7E21D`, 
+  clientId: `462C23EFDD58459EAA6DBDE24FA7E21D`,
   // clientId: `6030C0D1BF0B42C59AC0056C098BAD87`,
-  clientSecret: `6k-yBz6c-q7y2KiQ0HM5PCQBQUVGtmwEpfMNGkFvGIs4rOzy`, 
+  clientSecret: `6k-yBz6c-q7y2KiQ0HM5PCQBQUVGtmwEpfMNGkFvGIs4rOzy`,
   // clientSecret: `3dqLHdc7NTar_wUlljHVPPPFXWhZFZdmBkjI3Ai_2e005TVC`,
   redirectUris: [
-    `http://localhost:8000/api/auth/xero/callback`,
-    `https://contract-management-server-v2-1kq1.vercel.app/api/auth/xero/callback`, 
+    // `http://localhost:8000/api/auth/xero/callback`,
+    `https://contract-management-server-v2-1kq1.vercel.app/api/auth/xero/callback`,
   ],
   scopes: [
     "openid",
     "profile",
     "email",
-    "accounting.transactions", 
+    "accounting.transactions",
     "accounting.contacts",
     "accounting.settings",
     "offline_access",
@@ -47,7 +47,9 @@ async function refreshXeroToken() {
 
     // Calculate new expiry time
     const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + (newTokenSet.expires_in || 1800));
+    expiresAt.setSeconds(
+      expiresAt.getSeconds() + (newTokenSet.expires_in || 1800)
+    );
 
     // Update the database with new tokens
     await XeroToken.findByIdAndUpdate(tokenData._id, {
@@ -69,10 +71,12 @@ async function refreshXeroToken() {
     };
   } catch (error) {
     console.error("❌ Error refreshing Xero token:", error.message);
-    
+
     // If refresh fails, the token might be completely invalid
     // User will need to reconnect to Xero
-    throw new Error(`Failed to refresh Xero token: ${error.message}. Please reconnect to Xero.`);
+    throw new Error(
+      `Failed to refresh Xero token: ${error.message}. Please reconnect to Xero.`
+    );
   }
 }
 
