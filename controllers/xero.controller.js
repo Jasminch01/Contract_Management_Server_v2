@@ -217,7 +217,7 @@ exports.getStatus = async (req, res) => {
         const newTokenSet = await refreshXeroToken();
 
         if (newTokenSet && newTokenSet.access_token) {
-          console.log("✅ Token refreshed successfully");
+          // console.log("✅ Token refreshed successfully");
 
           // Get updated token data
           const updatedTokenData = await XeroToken.findOne().sort({
@@ -235,7 +235,7 @@ exports.getStatus = async (req, res) => {
           throw new Error("Token refresh returned invalid data");
         }
       } catch (refreshError) {
-        console.error("❌ Token refresh failed:", refreshError.message);
+        // console.error("❌ Token refresh failed:", refreshError.message);
 
         // Token cannot be refreshed - user needs to reconnect
         return res.status(200).json({
@@ -257,7 +257,7 @@ exports.getStatus = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error checking Xero status:", error);
+    // console.error("❌ Error checking Xero status:", error);
     res.status(500).json({
       error: "Failed to check Xero connection status",
       data: {
