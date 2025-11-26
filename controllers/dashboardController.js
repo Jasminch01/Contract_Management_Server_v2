@@ -23,9 +23,11 @@ const calculateCommission = (contracts) => {
       }
       // If no valid brokerage payable, multiplier remains 0
 
+      console.log(sum)
+      console.log(rate)
+      console.log(tonnes)
       return sum + rate * tonnes * multiplier;
     }
-
     return sum;
   }, 0);
 };
@@ -47,7 +49,7 @@ exports.getDashboardSummary = async (req, res) => {
 
     const dailyCommission = calculateCommission(todayContracts);
     const weeklyCommssion = calculateCommission(weekContracts);
-    const completed = allContracts.filter((c) => c.status === "Complete");
+    const completed = allContracts.filter((c) => c.status === "Complete" || "Invoiced");
     const incomplete = allContracts.filter((c) => c.status === "Incomplete");
 
     res.json({

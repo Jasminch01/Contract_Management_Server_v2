@@ -396,7 +396,7 @@ exports.createInvoice = async (req, res) => {
     try {
       tokenSet = await getXeroAccessToken();
     } catch (error) {
-      console.error("Error getting access token:", error.message);
+      // console.error("Error getting access token:", error.message);
       return res.status(401).json({
         success: false,
         message: "Xero connection expired. Please reconnect to Xero.",
@@ -423,13 +423,13 @@ exports.createInvoice = async (req, res) => {
     const bufferTime = 5 * 60 * 1000; // 5 minutes
 
     if (now.getTime() >= expiresAt.getTime() - bufferTime) {
-      console.log("Token expired or expiring soon, refreshing...");
+      // console.log("Token expired or expiring soon, refreshing...");
 
       try {
         const { refreshXeroToken } = require("../utils/xero");
         tokenSet = await refreshXeroToken();
       } catch (refreshError) {
-        console.error("❌ Token refresh failed:", refreshError.message);
+        // console.error("❌ Token refresh failed:", refreshError.message);
 
         // If refresh fails, token is completely expired - user needs to reconnect
         return res.status(401).json({
