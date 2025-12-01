@@ -1,6 +1,4 @@
 // xero invoicing mulele added in prod
-
-
 const XeroToken = require("../models/XeroToken");
 const Contract = require("../models/Contract");
 const {
