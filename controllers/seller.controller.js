@@ -65,11 +65,11 @@ exports.getSellers = async (req, res) => {
       limit = 10,
       legalName,
       abn,
+      mainNgr,
       dateFilter,
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
-
     // Convert page and limit to numbers
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
@@ -88,6 +88,9 @@ exports.getSellers = async (req, res) => {
     }
     if (abn) {
       searchConditions.push({ abn: { $regex: abn, $options: "i" } });
+    }
+    if (mainNgr) {
+      searchConditions.push({ mainNgr: { $regex: mainNgr, $options: "i" } });
     }
 
     // If any search conditions exist, use $or
@@ -141,40 +144,6 @@ exports.getSellers = async (req, res) => {
   }
 };
 
-// exports.getSellers = async (req, res) => {
-//   try {
-//     const filter = req.query.filter;
-//     const page = Number(req.query.page) || 1;
-//     const limit = Number(req.query.limit) || 10;
-
-//     let query = { isDeleted: false };
-
-//     if(filter === 'last-week') {
-//       const lastWeek = new Date();
-//       lastWeek.setDate(lastWeek.getDate() - 7);
-//       query.createdAt = { $gte: lastWeek };
-//     }
-
-//     const skip = (page -1) * limit;
-
-//     const [sellers, total] = await Promise.all([
-//       Seller.find(query)
-//         .sort({createdAt: -1})
-//         .skip(skip)
-//         .limit(limit),
-//       Seller.countDocuments(query)
-//     ])
-//     res.status(200).json({
-//       page,
-//       totalPages: Math.ceil(total / limit),
-//       data: sellers
-//     })
-//   }
-//   catch(err){
-//     res.status(500).json({message: 'Error fetching sellers', error: err});
-//   }
-// };
-
 exports.getSeller = async (req, res) => {
   try {
     const seller = await Seller.findById(req.params.id);
@@ -211,11 +180,14 @@ exports.deleteSeller = async (req, res) => {
 };
 
 exports.searchSellers = async (req, res) => {
-  console.log(req.query.q);
   try {
     const q = req.query.q || "";
     const sellers = await Seller.find({
-      $or: [{ legalName: new RegExp(q, "i") }, { abn: new RegExp(q, "i") }],
+      $or: [
+        { legalName: new RegExp(q, "i") },
+        { abn: new RegExp(q, "i") },
+        { mainNgr: new RegExp(q, "i") },
+      ],
     }).limit(10);
     res.json({ data: sellers });
   } catch (err) {

@@ -3,10 +3,13 @@ const XeroToken = require("../models/XeroToken");
 
 // Xero Client
 const xero = new XeroClient({
-  clientId: `6030C0D1BF0B42C59AC0056C098BAD87`,
-  clientSecret: `QfxeO6UQZb3ZPR_0z1EPMtdXDGhLroFaEFJC9dSYN-C9iKzI`,
+  clientId: `462C23EFDD58459EAA6DBDE24FA7E21D`,
+  // clientId: `6030C0D1BF0B42C59AC0056C098BAD87`,
+  clientSecret: `6k-yBz6c-q7y2KiQ0HM5PCQBQUVGtmwEpfMNGkFvGIs4rOzy`,
+  // clientSecret: `3dqLHdc7NTar_wUlljHVPPPFXWhZFZdmBkjI3Ai_2e005TVC`,
   redirectUris: [
-    `https://contract-management-test.vercel.app/api/auth/xero/callback`,
+    // `http://localhost:8000/api/auth/xero/callback`,
+    `https://contract-management-server-v2-1kq1.vercel.app/api/auth/xero/callback`,
   ],
   scopes: [
     "openid",
@@ -44,7 +47,9 @@ async function refreshXeroToken() {
 
     // Calculate new expiry time
     const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + (newTokenSet.expires_in || 1800));
+    expiresAt.setSeconds(
+      expiresAt.getSeconds() + (newTokenSet.expires_in || 1800)
+    );
 
     // Update the database with new tokens
     await XeroToken.findByIdAndUpdate(tokenData._id, {
@@ -66,10 +71,12 @@ async function refreshXeroToken() {
     };
   } catch (error) {
     console.error("❌ Error refreshing Xero token:", error.message);
-    
+
     // If refresh fails, the token might be completely invalid
     // User will need to reconnect to Xero
-    throw new Error(`Failed to refresh Xero token: ${error.message}. Please reconnect to Xero.`);
+    throw new Error(
+      `Failed to refresh Xero token: ${error.message}. Please reconnect to Xero.`
+    );
   }
 }
 
@@ -152,32 +159,41 @@ const buildLineItems = (contract, taxType, accountCode) => {
   try {
     const lineItems = [];
 
-    // Helper function to calculate brokerage amount
-    const calculateBrokerageAmount = () => {
-      const brokerageRate = contract.brokerageRate || 0;
-      const priceExGST = contract.priceExGST || 0;
-      const tonnes = contract.tonnes || 0;
+    // Calculate the total price (matching your formula)
+    const calculateTotalPrice = () => {
+      const rate = parseFloat(contract.brokerRate) || 0;
+      const tonnes = parseFloat(contract.tonnes) || 0;
+      let multiplier = 0;
 
-      // Calculate total brokerage
-      const totalBrokerage = (priceExGST * tonnes * brokerageRate) / 100;
-
-      // If split between buyer and seller, divide by 2
+      // Check who pays brokerage
       if (
+        contract.brokeragePayableBy === "Buyer & Seller" ||
+        contract.brokeragePayableBy === "Seller & Buyer" ||
         contract.brokeragePayableBy === "buyer & seller" ||
         contract.brokeragePayableBy === "seller & buyer"
       ) {
-        return totalBrokerage / 2;
+        multiplier = 2;
+      } else if (
+        contract.brokeragePayableBy === "Buyer" ||
+        contract.brokeragePayableBy === "Seller" ||
+        contract.brokeragePayableBy === "buyer" ||
+        contract.brokeragePayableBy === "seller"
+      ) {
+        multiplier = 1;
       }
-
-      return totalBrokerage;
+      return rate * tonnes * multiplier;
     };
 
-    const brokerageAmount = calculateBrokerageAmount();
+    const totalPrice = calculateTotalPrice();
+    const tonnes = parseFloat(contract.tonnes) || 0;
+
+    // Calculate price per tonne (priceExGST)
+    const priceExGST = tonnes > 0 ? totalPrice / tonnes : 0;
 
     // Build description with all contract details
     const descriptionParts = [
       `Contract: ${contract.contractNumber || "N/A"}`,
-      `${contract.tonnes || 0}mt ${contract.grade || ""}`,
+      `${contract.grade || ""}`,
       `Seller: ${contract.seller?.legalName || "Unknown"}`,
       `Buyer: ${contract.buyer?.name || "Unknown"}`,
     ];
@@ -198,37 +214,18 @@ const buildLineItems = (contract, taxType, accountCode) => {
     // Create the line item
     lineItems.push({
       description: description,
-      quantity: 1,
-      unitAmount: contract.priceExGST,
+      quantity: tonnes, // Quantity = tonnes
+      unitAmount: priceExGST, // Unit Amount = price per tonne (Ex GST)
       accountCode: accountCode,
       taxType: taxType,
     });
 
-    console.log(`✅ Built line item for contract ${contract.contractNumber}:`, {
-      description: description.substring(0, 50) + "...",
-      quantity: 1,
-      unitAmount: contract.priceExGST,
-      taxType,
-      accountCode,
-    });
-
     return lineItems;
   } catch (err) {
-    console.error("⚠️ Failed to build line items:", err.message);
-    console.error("Contract data:", {
-      contractNumber: contract?.contractNumber,
-      priceExGST: contract?.priceExGST,
-      tonnes: contract?.tonnes,
-      brokerageRate: contract?.brokerageRate,
-    });
-
-    // Fallback line item
     return [
       {
-        description: `Contract ${
-          contract.contractNumber || "Unknown"
-        } - Brokerage Fee`,
-        quantity: 1,
+        description: `Contract ${contract.contractNumber || "Unknown"} - Fee`,
+        quantity: parseFloat(contract.tonnes) || 1,
         unitAmount: 0,
         accountCode,
         taxType,
@@ -236,6 +233,87 @@ const buildLineItems = (contract, taxType, accountCode) => {
     ];
   }
 };
+
+// const buildLineItems = (contract, taxType, accountCode) => {
+//   try {
+//     const lineItems = [];
+
+//     // Helper function to calculate brokerage amount
+//     const calculateBrokerageAmount = () => {
+//       const brokerageRate = contract.brokerageRate || 0;
+//       const priceExGST = contract.priceExGST || 0;
+//       const tonnes = contract.tonnes || 0;
+
+//       // Calculate total brokerage
+//       const totalBrokerage = (priceExGST * tonnes * brokerageRate) / 100;
+
+//       // If split between buyer and seller, divide by 2
+//       if (
+//         contract.brokeragePayableBy === "buyer & seller" ||
+//         contract.brokeragePayableBy === "seller & buyer"
+//       ) {
+//         return totalBrokerage / 2;
+//       }
+
+//       return totalBrokerage;
+//     };
+
+//     const brokerageAmount = calculateBrokerageAmount();
+
+//     // Build description with all contract details
+//     const descriptionParts = [
+//       `Contract: ${contract.contractNumber || "N/A"}`,
+//       `${contract.tonnes || 0}mt ${contract.grade || ""}`,
+//       `Seller: ${contract.seller?.legalName || "Unknown"}`,
+//       `Buyer: ${contract.buyer?.name || "Unknown"}`,
+//     ];
+
+//     // Add optional details
+//     if (contract.deliveryDestination) {
+//       descriptionParts.push(`Destination: ${contract.deliveryDestination}`);
+//     }
+//     if (contract.deliveryOption) {
+//       descriptionParts.push(`Delivery: ${contract.deliveryOption}`);
+//     }
+//     if (contract.notes) {
+//       descriptionParts.push(`Notes: ${contract.notes}`);
+//     }
+
+//     const description = descriptionParts.join(" | ");
+
+//     // Create the line item
+//     lineItems.push({
+//       description: description,
+//       quantity: 1,
+//       unitAmount: contract.priceExGST,
+//       accountCode: accountCode,
+//       taxType: taxType,
+//     });
+
+//     return lineItems;
+//   } catch (err) {
+//     console.error("⚠️ Failed to build line items:", err.message);
+//     console.error("Contract data:", {
+//       contractNumber: contract?.contractNumber,
+//       priceExGST: contract?.priceExGST,
+//       tonnes: contract?.tonnes,
+//       brokerageRate: contract?.brokerageRate,
+//     });
+
+//     // Fallback line item
+//     return [
+//       {
+//         description: `Contract ${
+//           contract.contractNumber || "Unknown"
+//         } - Brokerage Fee`,
+//         quantity: 1,
+//         unitAmount: 0,
+//         accountCode,
+//         taxType,
+//       },
+//     ];
+//   }
+// };
 
 // Find or Create Contact
 const findOrCreateContact = async (
@@ -371,7 +449,7 @@ module.exports = {
   getXeroAccessToken,
   getXeroTenantId,
   isXeroConnected,
-  refreshXeroToken, // ✅ NOW EXPORTED
+  refreshXeroToken,
   getDefaultTaxType,
   getDefaultRevenueAccount,
   buildLineItems,

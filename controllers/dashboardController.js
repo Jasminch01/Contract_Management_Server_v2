@@ -4,7 +4,7 @@ const moment = require("moment");
 const calculateCommission = (contracts) => {
   return contracts.reduce((sum, contract) => {
     // Only process completed contracts
-    if (contract.status === "Complete") {
+    if (contract.status === "Complete" || contract.status === "Invoiced") {
       const rate = parseFloat(contract.brokerRate) || 0;
       const tonnes = parseFloat(contract.tonnes) || 0;
       let multiplier = 0;
@@ -22,10 +22,8 @@ const calculateCommission = (contracts) => {
         multiplier = 1;
       }
       // If no valid brokerage payable, multiplier remains 0
-
       return sum + rate * tonnes * multiplier;
     }
-
     return sum;
   }, 0);
 };
@@ -47,7 +45,7 @@ exports.getDashboardSummary = async (req, res) => {
 
     const dailyCommission = calculateCommission(todayContracts);
     const weeklyCommssion = calculateCommission(weekContracts);
-    const completed = allContracts.filter((c) => c.status === "Complete");
+    const completed = allContracts.filter((c) => c.status === "Complete" || c.status === "Invoiced");
     const incomplete = allContracts.filter((c) => c.status === "Incomplete");
 
     res.json({
