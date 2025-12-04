@@ -1,13 +1,10 @@
 const mongoose = require("mongoose");
-const Buyer = require("./Buyer.js");
-const Seller = require("./Seller.js");
-const Counter = require("./Counter");
 
 const contactSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
+    email: { type: String, required: false, default: null },
+    phoneNumber: { type: String, required: false, default: null },
     isPrimary: { type: Boolean },
   },
   { _id: false }

@@ -9,6 +9,7 @@ const Buyer = require("../models/Buyer");
 
 // @desc Create a new contract.
 exports.createContract = async (req, res) => {
+
   try {
     const data = req.body;
     // Validate required fields
