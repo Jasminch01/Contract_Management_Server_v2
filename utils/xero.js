@@ -10,7 +10,7 @@ const xero = new XeroClient({
   redirectUris: [
     // `http://localhost:8000/api/auth/xero/callback`,
     // `https://contract-management-server-v2-1kq1.vercel.app/api/auth/xero/callback`,
-    `https://contract-management-livid.vercel.app/api/auth/xero/callback`,
+    `https://contract-management-server-tawny.vercel.app/api/auth/xero/callback`,
   ],
   scopes: [
     "openid",
